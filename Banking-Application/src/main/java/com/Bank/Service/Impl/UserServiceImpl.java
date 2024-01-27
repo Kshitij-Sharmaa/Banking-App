@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.Bank.Dto.AccountInfo;
 import com.Bank.Dto.BankResponse;
+import com.Bank.Dto.EnquiryRequest;
 import com.Bank.Dto.UserRequest;
 import com.Bank.Models.User;
 import com.Bank.Repo.UserRepo;
@@ -56,6 +57,38 @@ public class UserServiceImpl implements UserService{
 						.build()
 						)
 				.build();
+	}
+
+	@Override
+	public BankResponse balanceEnquiry(EnquiryRequest enquiryRequest) {
+	Boolean isAccountExist=userRepo.existsByAccountNumber(enquiryRequest.getAccountNumber());
+		if (!isAccountExist) {
+			return BankResponse.builder()
+					.responceCode(AccountUtils.ACCOUNT_NOT_EXISTED_CODE)
+					.responseMessage(AccountUtils.ACCOUNT_NOT_EXISTED_MESSAGE)
+					.accountInfo(null)
+					.build();
+		}
+		User foundUser=userRepo.findByAccountNumber(enquiryRequest.getAccountNumber());
+		return BankResponse.builder()
+				.responceCode(AccountUtils.ACCOUNT_FOUND_CODE)
+				.responseMessage(AccountUtils.ACCOUNT_FOUND_MESSAGE)
+				.accountInfo(AccountInfo.builder()
+						.accountName(foundUser.getFirstName()+ " "+foundUser.getLastName())
+						.accountNumber(foundUser.getAccountNumber())
+						.accountBalance(foundUser.getAccountBalance())
+						.build())
+				.build();
+	}
+
+	@Override
+	public String nameEnquiry(EnquiryRequest enquiryRequest) {
+		Boolean isAccountExist=userRepo.existsByAccountNumber(enquiryRequest.getAccountNumber());
+		if (!isAccountExist) {
+			return AccountUtils.ACCOUNT_NOT_EXISTED_MESSAGE;
+		}
+		User foundUser=userRepo.findByAccountNumber(enquiryRequest.getAccountNumber());
+		return foundUser.getFirstName()+ " "+foundUser.getLastName();
 	}
 	
 	
