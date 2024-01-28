@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Bank.Dto.BankResponse;
+import com.Bank.Dto.DebitCreditRequest;
 import com.Bank.Dto.EnquiryRequest;
 import com.Bank.Dto.UserRequest;
 import com.Bank.Service.UserService;
@@ -38,6 +39,16 @@ public class UserController {
 	public ResponseEntity<String> nameEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
 		String response=userservice.nameEnquiry(enquiryRequest);
 		return ResponseEntity.status(HttpStatus.FOUND).body(response);
+	}
+	
+	@PostMapping("credit")
+	public BankResponse creditAccount(@RequestBody DebitCreditRequest creditRequest) {
+		return userservice.creditAccount(creditRequest);
+	}
+	
+	@PostMapping("debit")
+	public BankResponse debitAccount(@RequestBody DebitCreditRequest debitRequest) {
+		return userservice.debitAccount(debitRequest);
 	}
 	
 }

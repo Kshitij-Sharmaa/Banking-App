@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.Bank.Dto.AccountInfo;
 import com.Bank.Dto.BankResponse;
+import com.Bank.Dto.DebitCreditRequest;
 import com.Bank.Dto.EnquiryRequest;
 import com.Bank.Dto.UserRequest;
 import com.Bank.Models.User;
@@ -89,6 +90,67 @@ public class UserServiceImpl implements UserService{
 		}
 		User foundUser=userRepo.findByAccountNumber(enquiryRequest.getAccountNumber());
 		return foundUser.getFirstName()+ " "+foundUser.getLastName();
+	}
+
+	@Override
+	public BankResponse creditAccount(DebitCreditRequest creditRequest) {
+		Boolean isAccountExist=userRepo.existsByAccountNumber(creditRequest.getAccountNumber());
+		if (!isAccountExist) {
+			return BankResponse.builder()
+					.responceCode(AccountUtils.ACCOUNT_NOT_EXISTED_CODE)
+					.responseMessage(AccountUtils.ACCOUNT_NOT_EXISTED_MESSAGE)
+					.accountInfo(null)
+					.build();
+		}
+		User userToCredit=userRepo.findByAccountNumber(creditRequest.getAccountNumber());
+		userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditRequest.getAmount()));
+		userRepo.save(userToCredit);
+		return BankResponse.builder()
+				.responceCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS_CODE)
+				.responseMessage(AccountUtils.ACCOUNT_CREDITED_MESSAGE)
+				.accountInfo(AccountInfo.builder()
+						.accountName(userToCredit.getFirstName()+" "+userToCredit.getLastName())
+						.accountBalance(userToCredit.getAccountBalance())
+						.accountNumber(userToCredit.getAccountNumber())
+						.build())
+				.build();
+	}
+
+	@Override
+	public BankResponse debitAccount(DebitCreditRequest debitRequest) {
+		Boolean isAccountExist=userRepo.existsByAccountNumber(debitRequest.getAccountNumber());
+		if (!isAccountExist) {
+			return BankResponse.builder()
+					.responceCode(AccountUtils.ACCOUNT_NOT_EXISTED_CODE)
+					.responseMessage(AccountUtils.ACCOUNT_NOT_EXISTED_MESSAGE)
+					.accountInfo(null)
+					.build();
+		}
+		User userToDebit=userRepo.findByAccountNumber(debitRequest.getAccountNumber());
+		
+		int amount=debitRequest.getAmount().intValue();
+		int userBalance=userToDebit.getAccountBalance().intValue();
+		
+		if (amount>userBalance) {
+			return BankResponse.builder()
+			.responceCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+			.responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+			.accountInfo(null)
+			.build();
+		}
+		else {
+			userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(debitRequest.getAmount()));
+			userRepo.save(userToDebit);
+			return BankResponse.builder()
+					.responceCode(AccountUtils.ACCOUNT_DEBITED_SUCCESS_CODE)
+					.responseMessage(AccountUtils.ACCOUNT_DEBITED_MESSAGE)
+					.accountInfo(AccountInfo.builder()
+							.accountName(userToDebit.getFirstName()+" "+userToDebit.getLastName())
+							.accountBalance(userToDebit.getAccountBalance())
+							.accountNumber(userToDebit.getAccountNumber())
+							.build())
+					.build();
+		}
 	}
 	
 	
